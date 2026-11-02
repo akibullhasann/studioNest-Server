@@ -1,5 +1,5 @@
 import express from 'express'
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import 'dotenv/config';
 import cors from "cors";
 
@@ -28,7 +28,7 @@ const mongoClient = await connectToMongoDB();
 const db = mongoClient.db("studioNest");
 const studioCollection = db.collection("studioSpace");
 
-// for adding details to the database for the studio at localhost:5000/add-tudio
+// for adding details to the database for the studio at localhost:5000/add-studio
  
 app.post('/add-studio', async (req, res) => {
   try {
@@ -44,10 +44,19 @@ app.post('/add-studio', async (req, res) => {
   }
 });
 
+// for getting details from the database for the studio at localhost:5000/studio-details
 
+app.get("/studio-details", async (req, res)=>{
+    const result = await studioCollection.find({}).toArray();
+    res.send(result);
+});
 
+app.get("/studio/:id", async(req, res) =>{
+  const {id} = req.params;
+  const result = await studioCollection.findOne({_id: new ObjectId(id)})
 
-
+  res.send(result)
+})
 
  
 app.get('/', (req,res)=>{
