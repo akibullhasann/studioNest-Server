@@ -27,6 +27,7 @@ export async function connectToMongoDB() {
 const mongoClient = await connectToMongoDB();
 const db = mongoClient.db("studioNest");
 const studioCollection = db.collection("studioSpace");
+const bookingCollection = db.collection("bookings");
 
 // for adding details to the database for the studio at localhost:5000/add-studio
  
@@ -51,6 +52,7 @@ app.get("/studio-details", async (req, res)=>{
     res.send(result);
 });
 
+// Api for getting data of single detail
 app.get("/studio/:id", async(req, res) =>{
   const {id} = req.params;
   const result = await studioCollection.findOne({_id: new ObjectId(id)})
@@ -58,6 +60,12 @@ app.get("/studio/:id", async(req, res) =>{
   res.send(result)
 })
 
+// making database for bookings Details
+app.post("/bookings-list", async(req, res)=>{
+    const data = req.body;
+    const result = await bookingCollection.insertOne(data);
+
+})
  
 app.get('/', (req,res)=>{
     res.send({message: 'server is running proper'})
