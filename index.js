@@ -51,7 +51,17 @@ app.get("/studio-details", async (req, res)=>{
     const result = await studioCollection.find({}).toArray();
     res.send(result);
 });
-
+app.get("/studio-details/:email", async (req, res) => {
+  try {
+    const email = req.params.email;
+    const result = await studioCollection
+      .find({ "host.email": email })
+      .toArray();
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: "Server error" });
+  }
+});
 // Api for getting data of single detail
 app.get("/studio/:id", async(req, res) =>{
   const {id} = req.params;
@@ -60,11 +70,62 @@ app.get("/studio/:id", async(req, res) =>{
   res.send(result)
 })
 
+// delete a studio listing (used by the My Listings page)
+app.delete("/delete-studio/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await studioCollection.deleteOne({ _id: new ObjectId(id) });
+    res.send(result);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ message: "Something went wrong" });
+  }
+});
+
+// update a studio listing (used by the My Listings page)
+app.put("/update-studio/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    const result = await studioCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updates }
+    );
+    res.send(result);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ message: "Something went wrong" });
+  }
+});
+
 // making database for bookings Details
 app.post("/bookings-list", async(req, res)=>{
     const data = req.body;
     const result = await bookingCollection.insertOne(data);
+    res.send(result);
 
+})
+app.get("/my-bookings/:email", async (req, res) => {
+    const { email } = req.params
+    const result = await bookingCollection.find({
+        email: email
+    }).toArray();
+    res.send(result)
+
+})
+
+app.patch("/my-bookings/:id", async (req, res) => {
+
+    const { id } = req.params
+    const result = await bookingCollection.updateOne(
+      {_id: new ObjectId(id)},
+      {
+        $set: {
+          status: "cancelled",
+        },
+      }
+    )
+    res.send(result)
 })
  
 app.get('/', (req,res)=>{
