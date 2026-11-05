@@ -14,6 +14,38 @@ app.use(express.json());
 
 const client = new MongoClient(process.env.MONGODB_URI);
 
+
+
+
+const verifyToken = async (req, res, next) => {
+    const authHeaders = req.headers.authorization;
+    
+    if(!authHeaders){
+        return res.status(401).send({msg: 'Unauthorised'})
+    }
+
+    const token = authHeaders.split(" ")[1];
+    console.log(token)
+    
+    if(!token){
+        return res.status(401).send({msg: 'Unauthorised'})
+    }
+
+    const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks`) )
+
+    try{
+        const {payload} = await jwtVerify(token, JWKS);
+    console.log(payload)
+   
+    next()
+    }catch(error){
+        return res.status(500).send({msg: 'something wrong'})
+    }
+
+}
+
+
+
 export async function connectToMongoDB() {
   try {
     await client.connect();
@@ -62,8 +94,17 @@ app.get("/studio-details/:email", async (req, res) => {
     res.status(500).send({ message: "Server error" });
   }
 });
+
+// fetured studio api for home page
+app.get("/featured-studio", async (req, res) => {
+  const result = await studioCollection.find({}).limit(5).toArray();
+  res.send(result);
+});
+
+
+
 // Api for getting data of single detail
-app.get("/studio/:id", async(req, res) =>{
+app.get("/studio/:id", verifyToken ,async(req, res) =>{
   const {id} = req.params;
   const result = await studioCollection.findOne({_id: new ObjectId(id)})
 
